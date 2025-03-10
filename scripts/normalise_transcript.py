@@ -49,11 +49,10 @@ def concat_seg_horo(chemin:str, fichier:str) -> list[tuple]:
 			try:
 				# s = l[l.index(":")+3:]
 				s = l.split(":  ")
-				# print(s)
 				horo_deb = s[0].split(" - ")[0]
 				horo_fin = s[0].split(" - ")[1]
 				texte_seg = s[1]
-				print(f"horo_deb : {horo_deb}, horo_fin : {horo_fin}, seg : {texte_seg}")
+				# print(f"horo_deb : {horo_deb}, horo_fin : {horo_fin}, seg : {texte_seg}")
 				
 				# début de la boucle des 4 cas le seg "constitue"
 				# si le segment commence par une maj ou un tiret et se termine par un marqueur de fin de phrase
@@ -91,7 +90,6 @@ def concat_seg_horo(chemin:str, fichier:str) -> list[tuple]:
 				# si le segment commence par une minuscule ou un chiffre ou un guillemet et ne se termine pas par un marqueur de fin de phrase
 				# on est dans la phrase
 				elif (texte_seg[0].islower() or texte_seg[0].isdigit() or texte_seg[0].startswith('«')) and texte_seg[-2:].strip() not in ["?", ".", "…"]:
-					assert horo != ""
 					if texte_phrase == "": #il y avait une phra terminée avant et donc on doit commencer une nouvelle phrase
 						horo = horo_deb + " - "
 						texte_phrase += texte_seg.strip() + " "
@@ -100,8 +98,6 @@ def concat_seg_horo(chemin:str, fichier:str) -> list[tuple]:
 				# dernier cas: la phrase commence par une minuscule ou un chiffre ou un guillemet et se termine par un marqueur de fin de phrase
 				# on termine la phrase
 				elif (texte_seg[0].islower() or texte_seg[0].isdigit() or texte_seg[0].startswith('«')) and texte_seg[-2:].strip() in ["?", ".", "…"]:
-					# assert dans_phrase == True
-					# assert texte_phrase != ""
 					if texte_phrase == "": # on crée une ph entière
 						horo = horo_deb + " - " + horo_fin
 						transcripts_list.append((horo, texte_seg.strip()))
@@ -118,8 +114,6 @@ def concat_seg_horo(chemin:str, fichier:str) -> list[tuple]:
 			except IndexError:
 				print(f"IndexError : horo : {horo}, texte_seg : {texte_seg}")
 				pass
-			except AssertionError:
-				print(s)
-		# print(transcripts_list)
-		# print(len(transcripts_list))
+			# except AssertionError:
+			# 	print(f"assert texte_phrase != '' : {l}")
 	return transcripts_list

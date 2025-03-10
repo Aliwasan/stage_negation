@@ -51,7 +51,7 @@ def transcription(chemin_rep_audio:str, type_modele:str, chemin_fichier_transcri
                     file_transcript.write(f"{start_time} - {end_time}: {dico_segment['text']}\n")
                 else:
                     print(f"ajout de la durée du fichier précédent : {duree_fichier}")
-                    start_time = duree_fichier + dico_segment['start'] #!!! il fallait additionner le end_fichier_precedent avec le segment[start] ?
+                    start_time = duree_fichier + dico_segment['start']
                     end_time = start_time + (dico_segment['end'] - dico_segment['start'])
                     file_transcript.write(f"{start_time} - {end_time}: {dico_segment['text']}\n")
             
@@ -66,9 +66,9 @@ if __name__ == "__main__":
     
     type_modele = "turbo"
     chemin_fichier_transcrit = "../output/debat_entier/"
-    entete_debat = "europeennes_europe1"
+    entete_debat = "europeennes_bfm"
     entete_debat_texte_entier = entete_debat + "_texte_entier"
-    nom_rep = "../audio/europeennes_europe1/"
+    nom_rep = "../audio/europeennes_bfm/"
 
 
     startTime = datetime.datetime.now()
