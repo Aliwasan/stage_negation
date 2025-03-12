@@ -1,6 +1,7 @@
 from utils import sec2hms, df_to_csv
 from pydub import AudioSegment
 from normalise_transcript import EN_spacy, concat_seg_horo
+from manip_csv import df_to_csv
 import argparse
 import datetime
 import os
@@ -34,7 +35,8 @@ def find_neg(transcripts_list: list[tuple[str]])-> dict[tuple,list[str]]:
 					else:
 						# print(t.text)
 						ph_neg['n_ph'] = n_ph
-						ph_neg['horo'] = e[0]
+						ph_neg['horo'] = e[0] # ex : "582.56 - 583.68"
+						ph_neg['hms'] = sec2hms(e[0]) # ex : 00:09:42
 						ph_neg['sent'] = e[1]
 						# ph_neg['formes_neg'].append([t.text])
 						data_ph_neg.append(ph_neg)

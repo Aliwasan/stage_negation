@@ -5,9 +5,10 @@ import spacy
 # import fr_core_news_lg
 
 
-def sec2hms(seconds: list[float]):
+def sec2hms(seconds): # TODO : ajouter les types
 	""" Input: un horodatage de Whisper() en secondes au format string avec parfois 13 chiffres après la virgule
 	ex : 219.79999999999998
+	en fonction du format liste de float, string ou float
 	Output: l'horodatage convertit en heures, minutes et secondes format str ex: 00:00:37 - 00:00:40
 	"""
 	if isinstance(seconds, list) == True:
@@ -19,16 +20,19 @@ def sec2hms(seconds: list[float]):
 			s = int(t % 60) # Le reste des secondes
 			list_hms.append(f"{h:02d}:{m:02d}:{s:02d}")
 		return list_hms
+	elif isinstance(seconds, str) and "-" in seconds:
+		sec = float(seconds.split(' - ')[0])
+		# Conversion en heures, minutes, secondes 
+		h = int(sec // 3600) # Diviser par 3600 pour obtenir les heures
+		m = int((sec % 3600) // 60) # Diviser le reste par 60 pour obtenir les minutes
+		s = int(sec % 60) # Le reste des secondes
+		return f"{h:02d}:{m:02d}:{s:02d}"
 	else:
 		# Conversion en heures, minutes, secondes 
 		h = int(seconds // 3600) # Diviser par 3600 pour obtenir les heures
 		m = int((seconds % 3600) // 60) # Diviser le reste par 60 pour obtenir les minutes
 		s = int(seconds % 60) # Le reste des secondes
 		return f"{h:02d}:{m:02d}:{s:02d}"
-
-    # Python Program to Convert seconds
-# into hours, minutes and seconds
-    #return str(datetime.timedelta(seconds = float(seconds)))
 
 def cumul_hms(h_list: list[str]):
 	"""	Prend une liste de strings au format hms
@@ -110,7 +114,6 @@ def rep_liste(chemin_rep:str, extension:str):
     """
     liste = glob(chemin_rep + '*' + extension)
     liste_ord = sorted([e.split('/')[-1] for e in liste]) # 01europennes_europe1.mp3
-    
     return liste_ord
 
 def spacy_load_doc(chemin_fichier: str, texte_entier: str, nom_model):
@@ -124,13 +127,9 @@ def spacy_load_doc(chemin_fichier: str, texte_entier: str, nom_model):
 	nlp_doc = nlp(texte)
 	return nlp_doc
 
-def df_to_csv(chemin_fichier_csv: str, nom_fichier_csv: str, df):
-	df.write_csv(chemin_fichier_csv+nom_fichier_csv, null_value="N/A")
-	return
-
-if __name__ == "__main__":
+# if __name__ == "__main__":
 	
-	print(sec2hms([7360.129365079366]))
+	# print(sec2hms([7360.129365079366]))
 	# list_hms = ['00:59:47', '00:59:50'] # 00:39:52
 	# # print(cumul_hms(list_hms))
 	# tup_hms = ['00:19:58', '00:20:09']
@@ -143,3 +142,7 @@ if __name__ == "__main__":
 	# print(d)
 	
 	# print(delta_secondes((8388.169365079366, 8388.173832199547)))
+
+	# seconds = "582.56 - 583.68"
+	# print(sec2hms(seconds))
+	
