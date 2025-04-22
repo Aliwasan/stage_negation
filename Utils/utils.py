@@ -4,7 +4,10 @@ import os
 import pathlib
 from pathlib import Path
 import regex
+import termios
 
+def vider_buffer():
+    termios.tcflush(sys.stdin, termios.TCIOFLUSH)
 
 def sec2hms(seconds): # TODO : ajouter les types
 	""" Input: un horodatage de Whisper() en secondes au format string avec parfois 13 chiffres après la virgule
@@ -120,8 +123,8 @@ def rep_liste(chemin_rep:str, extension:str):
 def taille_fichier_mots(chemin_fichier: str, nom_fichier: str):
 	"""
 		ouvre un fichier
-		lit chaque ligne et la tokenize en ignorant les ponctuations
-		compte le nbre de toks
+		lit chaque ligne et remplaçe les ponctuations avant de la tokenizer.
+		retourne le nbre de toks
 	"""
 	cpteur_toks = 0
 	for ligne in open(chemin_fichier + nom_fichier):
@@ -138,11 +141,13 @@ def rename_dir(chemin_rep: str, ancien_nom: str, nveau_nom: str):
 	os.chdir(chemin_rep)
 	os.rename(nveau_nom,ancien_nom)
 	return
+
 def rename_dir_file(chemin_rep, ancien_nom_fichier: str, nveau_nom_fichier: str):
 	""" renomme le fichier contenu dans le rep au bout du chemin donné en arg"""
 	# os.chdir(chemin_rep)
 	os.rename(os.path.join(chemin_rep,ancien_nom_fichier), os.path.join(chemin_rep, nveau_nom_fichier))
 	return
+
 
 if __name__ == "__main__":
 	
