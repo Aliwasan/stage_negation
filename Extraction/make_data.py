@@ -6,66 +6,79 @@ import spacy
 import re
 import polars as pl
 import json
-rep_courant = os.path.dirname(__file__)
-print(rep_courant)
-sys.path.append(os.path.join(rep_courant, '..', 'Utils')) # __file__ : chemin absolu du script courant               
-import utils, manip_csv
+import glob
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Utils'))        
+import utils, manip_csv, spacy_feats
 from pydub import AudioSegment
 from normalise_transcript import concat_seg_horo
 
 
-def find_neg(transcripts_list: list[tuple[str]])-> dict[tuple,list[str]]:
+def find_neg(transcripts_list: list[tuple[str]], nom_modele: str)-> dict[tuple,list[str]]:
 	""" Détecte les phrases négatives à partir à p. d'une regex des mots négatifs
-		utilise Spacy pour désambiguïser les "plus" grâce étiquette Polarity=Neg
+		utilise un modèle de langue Spacy pour désambiguïser les "pas", "plus", "personne" grâce étiquette Polarity=Neg
 		Renvoie un json avec 
 	"""
 	global motif_neg
-	modele = spacy.load("fr_dep_news_trf")
+	modele = spacy.load(nom_modele)
 	data_ph_neg = []
 	n_ph = 1
 	for e in transcripts_list:
 		ph_neg = {}
 		if e[1] != "":
 			tokens = modele(e[1]) # l'objet phrase spacy doc
-			s = tokens.text # la str de la phrase
-			m = motif_neg.findall(s)
+			m1 = motif_neg.findall(e[1])
 			for i,t in enumerate(tokens):
-				if t.text in m:
-					# tests de désambiguïsation de plus et pas car on veut l'expression "c'est pas"
-					if t.text == "plus" and "Polarity=Neg" not in t.morph:
-						continue # on prend le token suivant
-					elif t.text == "pas" and "Polarity=Neg" not in t.morph:
-						# test si le "pas" suit un "c'est" on part du pppe que seuls des ADV en ment sont placés entre est et pas.
-						if tokens[i-2:i].text.lower() == "c'est"\
-							or tokens[i-3:i].text.lower() == "ce n'est"\
-							or (tokens[i-3:i-1].text.lower() == "c'est" and "ADV" in [t.pos_ for t in tokens[i-3:i]])\
-							or (tokens[i-4:i-1].text.lower() == "ce n'est" and "ADV" in [t.pos_ for t in tokens[i-4:i]]):
+				if t.text in m1:
+					if spacy_feats.pas_precede_DET_NUM(tokens, t, i):
+						continue
+					# FAUX POSITIFS : Polarity=Neg à écarter
+					elif "Polarity=Neg" in t.morph:
+						if t.text.lower == "n'" and tokens[i+1:i+2].text.lower() == "importe":
+							continue
+						elif spacy_feats.pas_deb_ph(tokens):
+							continue
+						elif spacy_feats.inf_precede_negateur(tokens, t, i, 'pas', 7):
+							continue
+						else:
 							ph_neg['n_ph'] = n_ph
 							ph_neg['horo'] = e[0] # ex : "582.56 - 583.68"
 							ph_neg['hms'] = utils.sec2hms(e[0]) # ex : 00:09:42
 							ph_neg['sent'] = e[1]
 							data_ph_neg.append(ph_neg)
 							n_ph += 1
-							break # suffit à prendre la ph on peut sortir de la boucle tokens
+							break
+					# VRAIS NÉGATIFS Pas de Polarity=Neg
+					else: # "Polarity=Neg" not in t.morph ou autre cas
+						if spacy_feats.rien_vrai_neg(tokens, t, i):
+							continue
+						elif spacy_feats.ou_et_mais_etc_pas(tokens, t, i):
+							continue
+						elif spacy_feats.pas_suivi_adj(tokens, t, i):
+							continue
+						elif spacy_feats.exp_pas(tokens, t, i):
+							continue
+						elif spacy_feats.pos_personne(t):
+							continue
+						elif spacy_feats.comme_jamais(tokens, t, i):
+							continue
+						elif t.text.lower() == "plus":
+							continue
 						else:
-							continue # on prend le token suivant
-					else:
-						# print(t.text)
-						ph_neg['n_ph'] = n_ph
-						ph_neg['horo'] = e[0] # ex : "582.56 - 583.68"
-						ph_neg['hms'] = utils.sec2hms(e[0]) # ex : 00:09:42
-						ph_neg['sent'] = e[1]
-						# ph_neg['formes_neg'].append([t.text])
-						data_ph_neg.append(ph_neg)
-						n_ph += 1
-						break # suffit à prendre la ph on peut sortir de la boucle tokens
+							ph_neg['n_ph'] = n_ph
+							ph_neg['horo'] = e[0] # ex : "582.56 - 583.68"
+							ph_neg['hms'] = utils.sec2hms(e[0]) # ex : 00:09:42
+							ph_neg['sent'] = e[1]
+							data_ph_neg.append(ph_neg)
+							n_ph += 1
+							break
 				else:
 					pass
 	print(f"nbre de phrases négatives: {len(data_ph_neg)}")
-	with open(f'../output/json/{nom_debat}.json', 'w') as output_json:
+	with open(f'../output/json/json_bis/{nom_debat}.json', 'w') as output_json:
 		json.dump(data_ph_neg, output_json, indent=4)
 	df = pl.DataFrame(data_ph_neg)
-	# print(df)
+	manip_csv.print_df(df)
 	return df
 
 def horo_transcr_ph_neg(chemin_audio_file: str, chemin_json_ph_neg: str, nom_debat: str, chemin_rep_output_audio: str):
@@ -111,8 +124,8 @@ def horo_transcr_ph_neg(chemin_audio_file: str, chemin_json_ph_neg: str, nom_deb
 
 if __name__ == "__main__":
 	
-	motif_neg = re.compile(r"[Aa]ucune?s?|[Pp]ersonne|[Rr]ien|[Nn]ulles?(?: part)?|[Nn]ullement|[Nn]uls?|[Nn]'|[Nn]e|[Pp]as|[Jj]amais|[Pp]lus|[Nn]i")
-	
+	motif_neg = re.compile(r"\b([Aa]ucune?s?|[Pp]ersonne|[Rr]ien|[Nn]ulles?(?: part)?|[Nn]ullement|[Nn]uls?|[Nn]'|[Nn]e|[Pp]as|[Jj]amais|[Pp]lus|[Nn]i)\b")
+
 	parser = argparse.ArgumentParser(description="1er argument : nom du débat")
 	parser.add_argument("nom_debat", help="nom du débat transcrit")
 	args = parser.parse_args()
@@ -120,28 +133,29 @@ if __name__ == "__main__":
 
 	nom_rep = "../output/debat_entier/" + nom_debat +"/"
 	nom_fichier = nom_debat + ".txt"
-	nom_transcript_complete = nom_debat + "_texte_entier.txt"
-
-	# print("concaténation des segments de phrases")
-	# transcripts_list = concat_seg_horo(nom_rep, nom_fichier)
+	# nom_transcript_complete = nom_debat + "_texte_entier.txt"
+	nom_modele = "fr_dep_news_trf"
+	print("concaténation des segments de phrases")
+	transcripts_list = concat_seg_horo(nom_rep, nom_fichier)
 	# print(transcripts_list)
-	# print(f"len(transcript_list) : {len(transcripts_list)}")
-	
+	print(f"len(transcript_list) : {len(transcripts_list)}")
+	chemin_fichier_csv = "../output/csv/"
+
 	# startTime = datetime.datetime.now()
-	# df_json_ph_neg = find_neg(transcripts_list)
+	df_json_ph_neg = find_neg(transcripts_list, nom_modele)
 
-	# chemin_fichier_csv = "../output/csv/"
-	# nom_fichier_csv = nom_debat + ".csv"
+	chemin_fichier_csv = "../output/csv/csv_bis/"
+	nom_fichier_csv = nom_debat + ".csv"
 
-	# manip_csv.df_to_csv(chemin_fichier_csv, nom_fichier_csv, df_json_ph_neg)
+	manip_csv.df_to_csv(chemin_fichier_csv, nom_fichier_csv, df_json_ph_neg)
 	# endTime = datetime.datetime.now()
 	# print(f"Temps traitement extraction ph neg : {endTime - startTime}")
 
-	startTime = datetime.datetime.now()
-	audiofile = "../audio/debat_entier/" + nom_debat + ".mp3" # path to audiofile
-	chemin_rep_ph_neg = "../output/json/"
-	chemin_rep_output_audio = "../output/ph_neg/"
+	# startTime = datetime.datetime.now()
+	# audiofile = "../audio/debat_entier/" + nom_debat + ".mp3" # path to audiofile
+	# chemin_rep_ph_neg = "../output/json/"
+	# chemin_rep_output_audio = "../output/ph_neg/"
 	
-	horo_transcr_ph_neg(audiofile, chemin_rep_ph_neg, nom_debat, chemin_rep_output_audio)
-	endTime = datetime.datetime.now()
-	print(f"Temps traitement fichiers audios : {endTime - startTime}")
+	# horo_transcr_ph_neg(audiofile, chemin_rep_ph_neg, nom_debat, chemin_rep_output_audio)
+	# endTime = datetime.datetime.now()
+	# print(f"Temps traitement fichiers audios : {endTime - startTime}")
