@@ -1,5 +1,5 @@
 ## Description de l'ensemble
- Il s'agit d'une chaîne de traitement qui prend un fichier audio en entrée, les transcrit, puis extrait les phrases négatives de la transcription pour les présenter dans un tableur qui comporte, dans des colonnes distinctes :
+ Il s'agit d'une chaîne de traitement qui prend un fichier audio en entrée, le transcrit, puis extrait les phrases négatives de la transcription pour les présenter dans un tableur qui comporte, dans des colonnes distinctes :
  
  - le n° de la phrase
  - la position temporelle de la phrase dans le fichier audio du débat
