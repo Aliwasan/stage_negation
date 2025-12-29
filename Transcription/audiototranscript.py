@@ -1,16 +1,24 @@
 import argparse
 import os
+import sys
 import whisper
 import json
 import mutagen
 from mutagen.mp3 import MP3
 import datetime
 
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Utils'))        
+import utils
+
 def transcription(chemin_rep_audio:str, type_modele:str, chemin_fichier_transcrit:str, nom_debat:str):
-    """ Prend un nom de répertoire de fichiers audios 
+    """ 
+        https://github.com/openai/whisper/blob/main/README.md
+        Prend un nom de répertoire de fichiers audios 
         charge le modèle whisper donné et transcrit les fichiers audios du répertoire
-        retourne un fichier texte avec la transcription sous forme de segments (un par ligne) horodatée en secondes
+        retourne un fichier texte avec la transcription sous forme de segments (un par ligne) horodatés en secondes
         ex : 218.72 - 219.79999999999998:  – C'est faux, sortir des règles.
+        Ajoute la durée du fichier en secondes, récupérée avec mutagen, à la première borne (0.0) du fichier suivant
+        pour respecter la continuité du marquage temporel à l'échelle du débat.
     """
     try:
         os.mkdir(f"{chemin_fichier_transcrit}{nom_debat}")
@@ -21,7 +29,7 @@ def transcription(chemin_rep_audio:str, type_modele:str, chemin_fichier_transcri
     
     print("Chargement du modèle")
     model = whisper.load_model(type_modele)
-    list_audiofiles = rep_liste(chemin_rep_audio, '.mp3')
+    list_audiofiles = utils.liste_ord_rep(chemin_rep_audio, '.mp3')
     
     
     with open(chemin_fichier_transcrit + nom_debat + "/" + nom_debat + ".txt", 'w', encoding='utf-8') as file_transcript, open(chemin_fichier_transcrit + nom_debat + "/" + nom_debat + "_texte_entier.txt", 'w', encoding='utf-8') as file_total_transcript:
@@ -40,11 +48,12 @@ def transcription(chemin_rep_audio:str, type_modele:str, chemin_fichier_transcri
             transcript_dump = json.dumps(transcript, indent = 2, ensure_ascii = False)
             print(transcript_dump)
 
-            # récupération du texte_entier
+            # # récupération du texte_entier
             file_total_transcript.write(transcript['text'])
 
             # récupération des segments avec horo
             for dico_segment in transcript["segments"]:
+                print(dico_segment)
                 if cpteur_fichier == 1:
                     start_time = dico_segment['start']
                     end_time = dico_segment['end']
