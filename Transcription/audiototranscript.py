@@ -44,14 +44,11 @@ def transcription(chemin_rep_audio:str, type_modele:str, chemin_fichier_transcri
             print(f"Transcription de {f} terminée")
             print(f"Taille du fichier en nbre de segments audio : {len(transcript['segments'])}")
 
-            # dump des données
             transcript_dump = json.dumps(transcript, indent = 2, ensure_ascii = False)
             print(transcript_dump)
 
-            # # récupération du texte_entier
             file_total_transcript.write(transcript['text'])
 
-            # récupération des segments avec horo
             for dico_segment in transcript["segments"]:
                 print(dico_segment)
                 if cpteur_fichier == 1:
@@ -59,7 +56,6 @@ def transcription(chemin_rep_audio:str, type_modele:str, chemin_fichier_transcri
                     end_time = dico_segment['end']
                     file_transcript.write(f"{start_time} - {end_time}: {dico_segment['text']}\n")
                 else:
-                    # print(f"ajout de la durée du fichier précédent : {duree_fichier}")
                     start_time = duree_fichier + dico_segment['start']
                     end_time = start_time + (dico_segment['end'] - dico_segment['start'])
                     file_transcript.write(f"{start_time} - {end_time}: {dico_segment['text']}\n")
