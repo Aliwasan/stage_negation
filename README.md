@@ -1,16 +1,16 @@
-## Description de l'ensemble
- Il s'agit d'une chaîne de traitement qui prend un fichier audio en entrée, les transcrit, puis extrait les phrases négatives de la transcription pour les présenter dans un tableur qui comporte, dans des colonnes distinctes :
+## Description de la chaîne de traitement
+ Elle prend un fichier audio en entrée, le transcrit, puis extrait les phrases négatives de la transcription pour les présenter dans un tableur qui comporte, dans des colonnes distinctes :
  
- - le n° de la phrase
+ - le n° d'identification de la phrase
  - la position temporelle de la phrase dans le fichier audio du débat
- - la phrase transcrite réécoutée et corrigée
+ - la phrase transcrite corrigée à l'écoute
  
-À partir de ce tableur de référence, d'autres colonnes pourront s'ajouter avec d'autres caractéristiques associées à l'analyse de la phrase.
+À partir de ce tableur de référence, on ajoutera d'autres caractéristiques associées à l'analyse de la phrase.
 
 ## Préparation des fichers audios
-L'étape de préparation comporte des opérations manuelles : téléchargement et conversion des fichiers vidéos ou son, scission des fichiers en fichiers plus courts.
+L'étape de préparation comporte des opérations manuelles : téléchargement et conversion des fichiers vidéos ou son, scission des fichiers en fichiers de 20 min.
 
-Les fichiers audio lus en entrée de la chaîne de traitement sont au format .mp3 et à une fréquence d’échantillonnage de 44100 Hz. Leurs durées ne dépassent pas 20 min.
+Les fichiers audio lus en entrée de la chaîne de traitement sont au format .mp3 et à une fréquence d’échantillonnage de 44100 Hz.
 
 Les choix du format .mp3, de la fréquence d'échantillonage et de la durée ne sont pas contraints par le modèle de transcription, ils ont été fixés suite à des essais avec le modèle de transcription.
 
