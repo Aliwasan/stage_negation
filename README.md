@@ -17,6 +17,8 @@ Les choix du format .mp3, de la fréquence d'échantillonage et de la durée ne 
 ## Chaîne de traitement
 Du fichier audio jusqu'au fichier csv de phrases négatives, le traitement passe par trois modules. Les scripts sont lancés avec le nom du débat en argument à la ligne de commande.
 
+<img title="Pipeline pour un débat" src="https://github.com/Aliwasan/stage_negation/blob/main/img/flow_pipeline.svg" alt="" align="center">
+
 ### Module de transcription
 #### audiototranscript.py:
 
